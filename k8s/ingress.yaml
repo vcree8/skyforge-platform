@@ -1,0 +1,26 @@
+# Unit 4 - Cloud Computing and DevOps  -  OTHM K/650/7997
+# Artefact P4.10   Assessment criteria: AC 3.5 - Kubernetes services
+# ALB Ingress with TLS termination
+#
+# Vera Cree  |  Candidate 240301062  |  CIPS Centre DC2401845
+
+# ---------------- INGRESS ----------------
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: skyforge-api
+  namespace: production
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS13-1-2-2021-06
+    alb.ingress.kubernetes.io/healthcheck-path: /health/ready
+spec:
+  ingressClassName: alb
+  tls: [{ hosts: [platform.skyforge.io], secretName: skyforge-tls }]
+  rules:
+    - host: platform.skyforge.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: skyforge-api, port: { number: 80 } } }

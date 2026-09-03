@@ -1,0 +1,64 @@
+# Unit 4 - Cloud Computing and DevOps  -  OTHM K/650/7997
+# Artefact P4.10   Assessment criteria: AC 3.4 - scalable, secure, automated workload
+# Application Deployment with security context and probes
+#
+# Vera Cree  |  Candidate 240301062  |  CIPS Centre DC2401845
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skyforge-api
+  namespace: production
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxSurge: 1, maxUnavailable: 0 }   # zero-downtime
+  selector:
+    matchLabels: { app: skyforge-api }
+  template:
+    metadata:
+      labels: { app: skyforge-api }
+    spec:
+      serviceAccountName: skyforge-api      # IRSA - scoped AWS permissions
+      securityContext:                      # SECURE
+        runAsNonRoot: true
+        runAsUser: 65532
+        fsGroup: 65532
+        seccompProfile: { type: RuntimeDefault }
+      topologySpreadConstraints:            # HIGHLY AVAILABLE - spread across AZs
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels: { app: skyforge-api }
+      containers:
+        - name: api
+          image: 123456789012.dkr.ecr.eu-west-2.amazonaws.com/skyforge/platform:1.8.2
+          ports: [{ containerPort: 8080 }]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          resources:                        # COST-EFFECTIVE - measured, not guessed
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits:   {              memory: "1Gi"  }   # no CPU limit: avoids throttling
+          startupProbe:                     # AUTOMATED health management
+            httpGet: { path: /health/live, port: 8080 }
+            failureThreshold: 30
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /health/live, port: 8080 }
+            periodSeconds: 10
+          readinessProbe:
+            httpGet: { path: /health/ready, port: 8080 }
+            periodSeconds: 5
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: skyforge-db, key: password }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: {}                      # writable /tmp despite read-only root

@@ -1,0 +1,33 @@
+# Unit 4 - Cloud Computing and DevOps  -  OTHM K/650/7997
+# Artefact P4.1   Assessment criteria: AC 1.2 (git branching and code review)
+#
+# Vera Cree  |  Candidate 240301062  |  CIPS Centre DC2401845
+#
+# GitHub requires review from a CODEOWNER on any pull request touching a
+# matched path. Combined with the branch protection rules documented in
+# docs/branching-and-review-policy.md, this makes the review policy
+# enforceable by the platform rather than dependent on team discipline.
+#
+# Later matches take precedence over earlier ones.
+
+# Default owner for everything not matched below
+*                           @skyforge/platform-team
+
+# Infrastructure changes carry blast radius, so security reviews them too
+/terraform/                 @skyforge/infrastructure @skyforge/security
+/k8s/                       @skyforge/infrastructure
+
+# The container base image is a supply-chain control point
+/docker/Dockerfile          @skyforge/security
+
+# Pipeline definitions can bypass every other control, so they are
+# restricted to the platform leads
+/.github/workflows/         @skyforge/platform-leads
+/Jenkinsfile                @skyforge/platform-leads
+/CODEOWNERS                 @skyforge/platform-leads
+
+# Operational scripts run with elevated privilege on production hosts
+/scripts/                   @skyforge/infrastructure @skyforge/platform-leads
+
+# Documentation may be merged with a single platform-team review
+/docs/                      @skyforge/platform-team

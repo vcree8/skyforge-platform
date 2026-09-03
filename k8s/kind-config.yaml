@@ -1,0 +1,24 @@
+# Unit 4 - Cloud Computing and DevOps  -  OTHM K/650/7997
+# Artefact P4.9   Assessment criteria: AC 3.3
+# Local Kubernetes cluster definition (kind) - developer inner loop
+#
+# Vera Cree  |  Candidate 240301062  |  CIPS Centre DC2401845
+#
+# Create with:  kind create cluster --config k8s/kind-config.yaml
+
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: skyforge-local
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - { containerPort: 80,  hostPort: 80,  protocol: TCP }
+      - { containerPort: 443, hostPort: 443, protocol: TCP }
+  - role: worker
+  - role: worker

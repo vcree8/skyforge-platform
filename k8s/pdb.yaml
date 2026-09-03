@@ -1,0 +1,16 @@
+# Unit 4 - Cloud Computing and DevOps  -  OTHM K/650/7997
+# Artefact P4.10   Assessment criteria: AC 3.4 - high availability
+# Pod Disruption Budget protecting availability during patching
+#
+# Vera Cree  |  Candidate 240301062  |  CIPS Centre DC2401845
+
+# ---------------- POD DISRUPTION BUDGET (HIGHLY AVAILABLE) ----------------
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: skyforge-api
+  namespace: production
+spec:
+  minAvailable: 2                           # node patching cannot drop below 2
+  selector:
+    matchLabels: { app: skyforge-api }
